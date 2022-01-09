@@ -1,0 +1,7 @@
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/install/strip.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/install/local.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/install.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/list_install_components.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/rebuild_cache.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/edit_cache.dir
+/home/kia/assignment-2-bigboigit-1/CUnit-2-1efb971e0d/build/CMakeFiles/libcunit.dir

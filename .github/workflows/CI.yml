@@ -1,0 +1,83 @@
+name: CI
+# Run this workflow every time a new commit pushed to your repository
+on:
+  push:
+  repository_dispatch:
+    types: [grading]
+
+jobs:
+  # Set the job key. The key is displayed as the job name
+  # when a job name is not provided
+  Continuous-Testing:
+    # Name the Job
+    name: Continuous-Testing
+    # Set the type of machine to run on
+    runs-on: self-hosted
+
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - uses: actions/checkout@v2
+      #      - uses: actions/setup-python@v2
+      # ls
+      - name: commands
+        run: |
+          git log --pretty=format:'Name:%cn %nHash:%H%nTimestamp=%ci %n' -n 1 >> LOG
+          FILENAME=`basename ${{ github.repository }}`
+          echo $FILENAME >> LOG
+          echo "LOG_ARTIFACT=$FILENAME.log" >> $GITHUB_ENV
+          echo "JSON_ARTIFACT=${FILENAME}_Grade.json" >> $GITHUB_ENV
+          bash ./run.sh
+
+      - name: set-artifacts
+        id: artifact
+        if: ${{ failure() || success() }}
+        run: |
+          cp LOG $LOG_ARTIFACT
+          echo "##[set-output name=log;]$(echo ./$LOG_ARTIFACT)"
+          echo "##[set-output name=json;]$(echo ./$JSON_ARTIFACT)"
+      #          pip install pandas
+      #      - uses: actions/upload-artifact@v2
+      #        if: ${{ failure() || success() }}
+      #        with:
+      #          name: my-artifact
+      #          path: |
+      #            ${{ steps.artifact.outputs.log }}
+      #            ${{ steps.artifact.outputs.json }}
+
+      - name: Assign variable
+        if: ${{ failure() || success() }}
+        id: secret
+        run: |
+          cp LOG ${{ steps.artifact.outputs.log }}
+          echo '::set-output name=secret::${{secrets.DISPATCH_PASSWORD}}'
+
+      - name: copy-if-success
+        if: ${{ success() && github.event_name == 'repository_dispatch' && github.event.action == 'grading' && github.event.client_payload.password == steps.secret.outputs.secret }}
+        env:
+          SCP_HOST: ${{ secrets.HOST }}
+          SCP_USERNAME: ${{ secrets.USERNAME }}
+          SCP_KEY: ${{ secrets.KEY }}
+          SCP_SOURCE: "${{ steps.artifact.outputs.log }}, ${{ steps.artifact.outputs.json }}"
+          SCP_TARGET: "CMPT295/ASS2/PASS"
+          INPUT_STRIP_COMPONENTS: 1
+        run: drone-scp
+
+      - name: copy-if-failure
+        if: ${{ failure() && github.event_name == 'repository_dispatch' && github.event.action == 'grading' && github.event.client_payload.password == steps.secret.outputs.secret }}
+        env:
+          SCP_HOST: ${{ secrets.HOST }}
+          SCP_USERNAME: ${{ secrets.USERNAME }}
+          SCP_KEY: ${{ secrets.KEY }}
+          SCP_SOURCE: "${{ steps.artifact.outputs.log }}, ${{ steps.artifact.outputs.json }}"
+          SCP_TARGET: "CMPT295/ASS2/FAIL"
+          INPUT_STRIP_COMPONENTS: 1
+        run: drone-scp
+# uses: appleboy/scp-action@master
+
+# with:
+#   host: ${{ secrets.HOST }}
+#   username: ${{ secrets.USERNAME }}
+#   key: ${{ secrets.KEY }}
+#   source: "${{ steps.artifact.outputs.log }}, ${{ steps.artifact.outputs.json }}"
+#   target: "CMPT295/ASS1/FAIL"
+#   strip_components: 1
